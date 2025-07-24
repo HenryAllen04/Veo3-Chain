@@ -43,22 +43,23 @@ app.get('/', (req, res) => {
 // API endpoint to generate scene scripts
 app.post('/api/generate-scripts', async (req, res) => {
     try {
-        const { character, prompt } = req.body;
+        const { character, prompt, promptsOnly } = req.body;
         
         if (!character || !prompt) {
-            return res.status(400).json({ 
-                error: 'Character and prompt are required' 
+            return res.status(400).json({
+                error: 'Character and prompt are required'
             });
         }
 
-        console.log(`Generating scripts for character: ${character}, prompt: ${prompt}`);
+        console.log(`Generating scripts for character: ${character}, prompt: ${prompt}, promptsOnly: ${promptsOnly}`);
         
         const scripts = await generateSceneScripts(character, prompt);
         
         res.json({
             success: true,
             scripts,
-            estimatedCost: scripts.length * 4 // Estimated $4 per 8-second video (varies by actual length)
+            promptsOnly: promptsOnly || false,
+            estimatedCost: promptsOnly ? 0 : scripts.length * 4 // No cost if prompts only
         });
     } catch (error) {
         console.error('Error generating scripts:', error);

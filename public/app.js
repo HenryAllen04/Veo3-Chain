@@ -74,20 +74,22 @@ class Veo3StoryGenerator {
             alert('Please enter a story prompt');
             return;
         }
+        
+        const promptsOnly = document.getElementById('promptsOnly').checked;
 
         const generateBtn = document.getElementById('generateScripts');
         const originalText = generateBtn.textContent;
         
         try {
             generateBtn.disabled = true;
-            generateBtn.innerHTML = '<span class="loading mr-2"></span>Generating Veo3-Optimized Scripts...';
+            generateBtn.innerHTML = `<span class="loading mr-2"></span>${promptsOnly ? 'Generating Prompts...' : 'Generating Veo3-Optimized Scripts...'}`;
             
             const response = await fetch('/api/generate-scripts', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ character, prompt })
+                body: JSON.stringify({ character, prompt, promptsOnly })
             });
             
             const data = await response.json();
@@ -99,8 +101,16 @@ class Veo3StoryGenerator {
             this.currentScripts = data.scripts;
             this.currentCharacter = character;
             
-            this.displayScripts(data.scripts);
-            this.showStep(2);
+            // Check if prompts only mode is selected (already declared above)
+            if (promptsOnly) {
+                // Download prompts directly without showing step 2
+                this.downloadPrompts(data.scripts);
+                this.showSuccessMessage('Prompts generated and downloaded successfully!');
+            } else {
+                // Normal flow - show scripts for review
+                this.displayScripts(data.scripts);
+                this.showStep(2);
+            }
             
         } catch (error) {
             console.error('Error generating scripts:', error);
@@ -242,6 +252,56 @@ class Veo3StoryGenerator {
         setTimeout(() => {
             successMsg.remove();
         }, 3000);
+    }
+    
+    downloadPrompts(scripts) {
+        // Create a formatted text file with the prompts
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const filename = `veo3-prompts-${this.currentCharacter}-${timestamp}.txt`;
+        
+        let content = `Veo3 Story Prompts\n`;
+        content += `Character: ${this.currentCharacter}\n`;
+        content += `Generated: ${new Date().toLocaleString()}\n`;
+        content += `${'='.repeat(50)}\n\n`;
+        
+        scripts.forEach((script, index) => {
+            content += `SCENE ${index + 1} (8 seconds)\n`;
+            content += `${'-'.repeat(30)}\n`;
+            content += `${script}\n\n`;
+        });
+        
+        content += `\n${'='.repeat(50)}\n`;
+        content += `Note: Each scene is optimized for 8-second Veo3 video generation.\n`;
+        content += `Estimated cost if generated: $${(scripts.length * 4).toFixed(2)} (3 × 8-second videos at $0.50/second)\n`;
+        
+        // Create blob and download
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    
+    showSuccessMessage(message) {
+        // Create temporary success message
+        const successMsg = document.createElement('div');
+        successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center';
+        successMsg.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            ${message}
+        `;
+        document.body.appendChild(successMsg);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            successMsg.remove();
+        }, 5000);
     }
 
     backToStep1() {

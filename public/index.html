@@ -109,8 +109,21 @@
                 </div>
             </div>
             
-            <button 
-                id="generateScripts" 
+            <div class="mt-4">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        id="promptsOnly"
+                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        checked
+                    >
+                    <span class="text-sm text-gray-700">Generate prompts only (no video creation)</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1 ml-6">Check this to only generate and download prompts without creating videos</p>
+            </div>
+            
+            <button
+                id="generateScripts"
                 class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
             >
                 Generate 8-Second Scene Scripts
@@ -213,4 +226,4 @@
 
     <script src="/static/app.js"></script>
 </body>
-</html> 
+</html>
